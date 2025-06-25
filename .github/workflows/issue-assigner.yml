@@ -8,91 +8,91 @@ jobs:
   assign:
     runs-on: ubuntu-latest
     steps:
-    - name: Auto assign issue
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const { owner, repo } = context.repo;
-          const issue_number = context.issue.number;
-          
-          // 이슈 정보 가져오기
-          const { data: issue } = await github.rest.issues.get({
-            owner,
-            repo,
-            issue_number
-          });
-          
-          let assignees = [];
-          
-          // 기본 할당자 (프로젝트 메인테이너)
-          const defaultAssignees = ['visvaden7']; // 실제 GitHub 사용자명으로 변경
-          
-          // 라벨 기반 할당 규칙
-          const labels = issue.labels.map(label => label.name);
-          
-          if (labels.includes('bug')) {
-            // 버그 이슈는 메인테이너에게 할당
-            assignees.push(...defaultAssignees);
-          }
-          
-          if (labels.includes('enhancement') || labels.includes('feature')) {
-            // 기능 개선/추가는 관련 담당자에게 할당
-            assignees.push(...defaultAssignees);
-          }
-          
-          if (labels.includes('backend')) {
-            // 백엔드 관련 이슈
-            // assignees.push('backend-maintainer');
-          }
-          
-          if (labels.includes('frontend')) {
-            // 프론트엔드 관련 이슈
-            // assignees.push('frontend-maintainer');
-          }
-          
-          if (labels.includes('documentation')) {
-            // 문서 관련 이슈
-            // assignees.push('doc-maintainer');
-          }
-          
-          if (labels.includes('good first issue')) {
-            // 초보자 친화적 이슈는 할당하지 않음 (자발적 참여 유도)
-            assignees = [];
-          }
-          
-          // 제목 기반 할당 규칙
-          const title = issue.title.toLowerCase();
-          if (title.includes('urgent') || title.includes('critical')) {
-            // 긴급 이슈는 모든 관련자에게 할당
-            assignees.push(...defaultAssignees);
-          }
-          
-          // 기본 할당자가 없다면 메인테이너 할당
-          if (assignees.length === 0) {
-            assignees = defaultAssignees;
-          }
-          
-          // 중복 제거
-          assignees = [...new Set(assignees)];
-          
-          // 이슈에 할당자 지정
-          if (assignees.length > 0) {
-            await github.rest.issues.addAssignees({
+      - name: Auto assign issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            // 이슈 정보 가져오기
+            const { data: issue } = await github.rest.issues.get({
               owner,
               repo,
-              issue_number,
-              assignees
+              issue_number
             });
-            
-            // 할당 완료 코멘트
-            await github.rest.issues.createComment({
-              owner,
-              repo,
-              issue_number,
-              body: `🎯 **이슈가 할당되었습니다!**
+
+            let assignees = [];
+
+            // 기본 할당자 (프로젝트 메인테이너)
+            const defaultAssignees = ['visvaden7']; // 실제 GitHub 사용자명으로 변경
+
+            // 라벨 기반 할당 규칙
+            const labels = issue.labels.map(label => label.name);
+
+            if (labels.includes('bug')) {
+              // 버그 이슈는 메인테이너에게 할당
+              assignees.push(...defaultAssignees);
+            }
+
+            if (labels.includes('enhancement') || labels.includes('feature')) {
+              // 기능 개선/추가는 관련 담당자에게 할당
+              assignees.push(...defaultAssignees);
+            }
+
+            if (labels.includes('backend')) {
+              // 백엔드 관련 이슈
+              // assignees.push('backend-maintainer');
+            }
+
+            if (labels.includes('frontend')) {
+              // 프론트엔드 관련 이슈
+              // assignees.push('frontend-maintainer');
+            }
+
+            if (labels.includes('documentation')) {
+              // 문서 관련 이슈
+              // assignees.push('doc-maintainer');
+            }
+
+            if (labels.includes('good first issue')) {
+              // 초보자 친화적 이슈는 할당하지 않음 (자발적 참여 유도)
+              assignees = [];
+            }
+
+            // 제목 기반 할당 규칙
+            const title = issue.title.toLowerCase();
+            if (title.includes('urgent') || title.includes('critical')) {
+              // 긴급 이슈는 모든 관련자에게 할당
+              assignees.push(...defaultAssignees);
+            }
+
+            // 기본 할당자가 없다면 메인테이너 할당
+            if (assignees.length === 0) {
+              assignees = defaultAssignees;
+            }
+
+            // 중복 제거
+            assignees = [...new Set(assignees)];
+
+            // 이슈에 할당자 지정
+            if (assignees.length > 0) {
+              await github.rest.issues.addAssignees({
+                owner,
+                repo,
+                issue_number,
+                assignees
+              });
               
-              **할당자:** ${assignees.map(a => `@${a}`).join(', ')}
-              
-              할당된 분께서 이슈를 검토하고 처리해주실 예정입니다.`
-            });
-          }
+              // 할당 완료 코멘트
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body: `🎯 **이슈가 할당되었습니다!**
+                
+                **할당자:** ${assignees.map(a => `@${a}`).join(', ')}
+                
+                할당된 분께서 이슈를 검토하고 처리해주실 예정입니다.`
+              });
+            }
