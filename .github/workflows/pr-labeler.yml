@@ -1,0 +1,99 @@
+name: PR Auto Labeler
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Auto label PR
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const pull_number = context.issue.number;
+          
+          // PR 정보 가져오기
+          const { data: pr } = await github.rest.pulls.get({
+            owner,
+            repo,
+            pull_number
+          });
+          
+          // 변경된 파일 목록 가져오기
+          const { data: files } = await github.rest.pulls.listFiles({
+            owner,
+            repo,
+            pull_number
+          });
+          
+          let labels = [];
+          
+          // 제목 기반 라벨링
+          const title = pr.title.toLowerCase();
+          if (title.includes('[feat]') || title.includes('feature')) {
+            labels.push('enhancement');
+          }
+          if (title.includes('[fix]') || title.includes('bug')) {
+            labels.push('bug');
+          }
+          if (title.includes('[docs]') || title.includes('documentation')) {
+            labels.push('documentation');
+          }
+          if (title.includes('breaking')) {
+            labels.push('breaking-change');
+          }
+          
+          // 파일 경로 기반 라벨링
+          const fileExtensions = files.map(file => {
+            const ext = file.filename.split('.').pop();
+            const path = file.filename;
+            return { ext, path, additions: file.additions, deletions: file.deletions };
+          });
+          
+          // 파일 종류별 라벨링
+          if (fileExtensions.some(f => f.path.startsWith('backend/'))) {
+            labels.push('backend');
+          }
+          if (fileExtensions.some(f => f.path.startsWith('frontend/'))) {
+            labels.push('frontend');
+          }
+          if (fileExtensions.some(f => f.path.includes('test_'))) {
+            labels.push('tests');
+          }
+          if (fileExtensions.some(f => f.path === 'requirements.txt')) {
+            labels.push('dependencies');
+          }
+          if (fileExtensions.some(f => f.path.startsWith('docs/'))) {
+            labels.push('documentation');
+          }
+          
+          // 변경 크기에 따른 라벨링
+          const totalChanges = files.reduce((sum, file) => sum + file.additions + file.deletions, 0);
+          if (totalChanges > 500) {
+            labels.push('size/XL');
+          } else if (totalChanges > 100) {
+            labels.push('size/L');
+          } else if (totalChanges > 30) {
+            labels.push('size/M');
+          } else {
+            labels.push('size/S');
+          }
+          
+          // 중복 제거
+          labels = [...new Set(labels)];
+          
+          // 기본 라벨 추가
+          labels.push('needs-review');
+          
+          // 라벨 적용
+          if (labels.length > 0) {
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: pull_number,
+              labels
+            });
+          }

@@ -1,0 +1,55 @@
+name: PR Auto Assigner
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  assign:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Auto assign PR
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const pull_number = context.issue.number;
+          
+          // 기본 할당자 (프로젝트 메인테이너)
+          const defaultAssignees = ['visvaden7']; // 실제 GitHub 사용자명으로 변경
+          
+          // 파일 경로에 따른 할당 규칙
+          const { data: files } = await github.rest.pulls.listFiles({
+            owner,
+            repo,
+            pull_number
+          });
+          
+          let assignees = [...defaultAssignees];
+          
+          // 파일 경로 기반 할당 로직
+          for (const file of files) {
+            if (file.filename.startsWith('backend/')) {
+              // 백엔드 담당자 추가
+              // assignees.push('backend-maintainer');
+            }
+            if (file.filename.startsWith('frontend/')) {
+              // 프론트엔드 담당자 추가
+              // assignees.push('frontend-maintainer');
+            }
+            if (file.filename.includes('test_')) {
+              // 테스트 담당자 추가
+              // assignees.push('test-maintainer');
+            }
+          }
+          
+          // 중복 제거
+          assignees = [...new Set(assignees)];
+          
+          // PR에 할당자 지정
+          await github.rest.issues.addAssignees({
+            owner,
+            repo,
+            issue_number: pull_number,
+            assignees
+          });
