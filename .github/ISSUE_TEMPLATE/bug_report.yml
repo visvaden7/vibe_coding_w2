@@ -1,0 +1,79 @@
+name: 🐛 Bug Report
+description: 버그를 신고해주세요
+title: "[Bug] "
+labels: ["bug", "triage"]
+assignees:
+  - visvaden7
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        버그를 신고해주셔서 감사합니다! 아래 정보를 제공해주시면 빠르게 해결할 수 있습니다.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 버그 설명
+      description: 발생한 버그에 대해 명확하고 간결하게 설명해주세요.
+      placeholder: 어떤 문제가 발생했나요?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 재현 방법
+      description: 버그를 재현하는 단계를 순서대로 적어주세요.
+      placeholder: |
+        1. 페이지 '...'로 이동
+        2. '....' 버튼 클릭
+        3. '....' 입력
+        4. 에러 발생
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 예상 결과
+      description: 어떤 결과를 기대했나요?
+      placeholder: 예상했던 결과를 설명해주세요.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 실제 결과
+      description: 실제로 어떤 일이 발생했나요?
+      placeholder: 실제 발생한 결과를 설명해주세요.
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 환경 정보
+      description: 사용 중인 환경에 대해 알려주세요.
+      value: |
+        - OS: [예: macOS 14.0, Windows 11]
+        - Python 버전: [예: 3.9.7]
+        - 브라우저: [예: Chrome 118]
+        - 버전: [예: v1.0.0]
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 로그 및 스크린샷
+      description: 관련 에러 로그나 스크린샷이 있다면 첨부해주세요.
+      placeholder: 에러 로그나 스크린샷을 여기에 붙여넣어주세요.
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 추가 정보
+      description: 문제 해결에 도움이 될 만한 추가 정보가 있다면 적어주세요.
+      placeholder: 기타 참고사항이나 관련 정보
