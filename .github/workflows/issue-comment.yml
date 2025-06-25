@@ -1,0 +1,64 @@
+name: Issue Auto Comment
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Comment on new issue
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const issue_number = context.issue.number;
+          
+          // 이슈 정보 가져오기
+          const { data: issue } = await github.rest.issues.get({
+            owner,
+            repo,
+            issue_number
+          });
+          
+          let commentBody = `👋 **이슈를 등록해주셔서 감사합니다!**
+
+          **이슈 처리 프로세스:**
+          1. 이슈 검토 및 라벨링
+          2. 담당자 할당
+          3. 우선순위 결정
+          4. 개발 일정 수립
+
+          **참고사항:**
+          - 버그 리포트의 경우 재현 방법을 상세히 기술해주세요
+          - 기능 요청의 경우 사용 사례를 구체적으로 설명해주세요
+          - 추가 정보가 필요한 경우 코멘트로 문의드리겠습니다
+
+          빠른 시일 내에 검토 후 답변드리겠습니다! 🚀`;
+          
+          // 이슈 제목에 따른 맞춤형 코멘트 추가
+          const title = issue.title.toLowerCase();
+          if (title.includes('bug') || title.includes('error') || title.includes('문제')) {
+            commentBody += `\n\n**🐛 버그 리포트 체크리스트:**
+            - [ ] 재현 단계가 명확한가요?
+            - [ ] 예상 결과와 실제 결과가 기술되어 있나요?
+            - [ ] 환경 정보가 포함되어 있나요?
+            - [ ] 에러 로그나 스크린샷이 첨부되어 있나요?`;
+          }
+          
+          if (title.includes('feature') || title.includes('기능') || title.includes('요청')) {
+            commentBody += `\n\n**✨ 기능 요청 체크리스트:**
+            - [ ] 기능의 목적과 필요성이 명확한가요?
+            - [ ] 사용자 시나리오가 구체적인가요?
+            - [ ] 기대하는 동작이 상세히 기술되어 있나요?
+            - [ ] 대안이나 참고 자료가 있나요?`;
+          }
+          
+          // 코멘트 작성
+          await github.rest.issues.createComment({
+            owner,
+            repo,
+            issue_number,
+            body: commentBody
+          });

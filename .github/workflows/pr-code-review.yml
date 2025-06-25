@@ -1,0 +1,88 @@
+name: PR Auto Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  code-review:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Get changed files
+      id: changed-files
+      uses: tj-actions/changed-files@v40
+      with:
+        files: |
+          **.py
+          **.js
+          **.html
+          **.css
+    
+    - name: Auto code review
+      if: steps.changed-files.outputs.any_changed == 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const pull_number = context.issue.number;
+          
+          // 변경된 파일들에 대한 기본 리뷰 코멘트
+          const changedFiles = `${{ steps.changed-files.outputs.all_changed_files }}`.split(' ');
+          
+          let reviewComments = [];
+          
+          for (const file of changedFiles) {
+            if (file.endsWith('.py')) {
+              reviewComments.push({
+                path: file,
+                body: `**Python 파일 리뷰 체크포인트:**
+                - [ ] PEP 8 스타일 가이드 준수
+                - [ ] 함수/클래스 docstring 작성
+                - [ ] 적절한 예외 처리
+                - [ ] 타입 힌트 사용
+                - [ ] 테스트 코드 포함`,
+                line: 1
+              });
+            }
+            
+            if (file.startsWith('test_')) {
+              reviewComments.push({
+                path: file,
+                body: `**테스트 파일 리뷰 체크포인트:**
+                - [ ] 모든 중요 케이스 테스트
+                - [ ] Edge case 처리
+                - [ ] Mock 적절히 사용
+                - [ ] 테스트 이름이 명확함
+                - [ ] Given-When-Then 패턴 적용`,
+                line: 1
+              });
+            }
+          }
+          
+          // 전체 PR에 대한 리뷰 코멘트
+          const reviewBody = `## 🔍 자동 코드 리뷰
+
+          **일반적인 체크포인트:**
+          - [ ] 코드 가독성과 유지보수성
+          - [ ] 성능 최적화 고려사항
+          - [ ] 보안 취약점 확인
+          - [ ] 에러 핸들링 적절성
+          - [ ] 코드 중복 제거
+
+          **변경된 파일:** ${changedFiles.length}개
+          ${changedFiles.map(f => `- \`${f}\``).join('\n')}
+
+          리뷰어분들께서 위 체크포인트들을 참고하여 리뷰해주시면 감사하겠습니다! 🙏`;
+
+          // PR 리뷰 생성
+          await github.rest.pulls.createReview({
+            owner,
+            repo,
+            pull_number,
+            body: reviewBody,
+            event: 'COMMENT'
+          });

@@ -1,0 +1,131 @@
+name: Issue Auto Labeler
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Auto label issue
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const issue_number = context.issue.number;
+          
+          // 이슈 정보 가져오기
+          const { data: issue } = await github.rest.issues.get({
+            owner,
+            repo,
+            issue_number
+          });
+          
+          let labels = [];
+          
+          // 제목과 본문 기반 라벨링
+          const title = issue.title.toLowerCase();
+          const body = (issue.body || '').toLowerCase();
+          const content = `${title} ${body}`;
+          
+          // 이슈 유형 라벨링
+          if (content.includes('bug') || content.includes('error') || content.includes('문제') || 
+              content.includes('오류') || content.includes('에러')) {
+            labels.push('bug');
+          }
+          
+          if (content.includes('feature') || content.includes('기능') || content.includes('요청') ||
+              content.includes('추가') || content.includes('개선')) {
+            labels.push('enhancement');
+          }
+          
+          if (content.includes('question') || content.includes('질문') || content.includes('문의') ||
+              content.includes('how to') || content.includes('어떻게')) {
+            labels.push('question');
+          }
+          
+          if (content.includes('documentation') || content.includes('문서') || content.includes('docs') ||
+              content.includes('readme') || content.includes('가이드')) {
+            labels.push('documentation');
+          }
+          
+          // 컴포넌트/영역 라벨링
+          if (content.includes('backend') || content.includes('api') || content.includes('server') ||
+              content.includes('백엔드') || content.includes('서버')) {
+            labels.push('backend');
+          }
+          
+          if (content.includes('frontend') || content.includes('ui') || content.includes('ux') ||
+              content.includes('프론트엔드') || content.includes('화면')) {
+            labels.push('frontend');
+          }
+          
+          if (content.includes('test') || content.includes('testing') || content.includes('테스트')) {
+            labels.push('tests');
+          }
+          
+          if (content.includes('database') || content.includes('db') || content.includes('데이터베이스')) {
+            labels.push('database');
+          }
+          
+          if (content.includes('performance') || content.includes('slow') || content.includes('성능') ||
+              content.includes('속도') || content.includes('최적화')) {
+            labels.push('performance');
+          }
+          
+          if (content.includes('security') || content.includes('보안') || content.includes('vulnerability')) {
+            labels.push('security');
+          }
+          
+          // 우선순위 라벨링
+          if (content.includes('urgent') || content.includes('critical') || content.includes('긴급') ||
+              content.includes('중요') || title.includes('hotfix')) {
+            labels.push('priority-high');
+          } else if (content.includes('important') || content.includes('필요')) {
+            labels.push('priority-medium');
+          } else {
+            labels.push('priority-low');
+          }
+          
+          // 초보자 친화적 이슈 감지
+          if (content.includes('good first issue') || content.includes('beginner') || 
+              content.includes('easy') || content.includes('simple')) {
+            labels.push('good first issue');
+          }
+          
+          // 도움 요청 감지
+          if (content.includes('help wanted') || content.includes('help') || 
+              content.includes('도움') || content.includes('지원')) {
+            labels.push('help wanted');
+          }
+          
+          // 중복 제거
+          labels = [...new Set(labels)];
+          
+          // 최소 하나의 라벨은 추가
+          if (labels.length === 0) {
+            labels.push('triage');
+          }
+          
+          // 라벨 적용
+          if (labels.length > 0) {
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number,
+              labels
+            });
+            
+            // 라벨링 완료 코멘트
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number,
+              body: `🏷️ **자동 라벨링이 완료되었습니다!**
+              
+              **적용된 라벨:** ${labels.map(l => `\`${l}\``).join(', ')}
+              
+              라벨이 부정확하다면 수동으로 수정해주세요.`
+            });
+          }

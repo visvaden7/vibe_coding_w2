@@ -1,0 +1,23 @@
+# Global owners
+* @visvaden7
+
+# Backend code
+/backend/ @visvaden7
+/test_backend.py @visvaden7
+/test_agent.py @visvaden7
+
+# Frontend code  
+/frontend/ @visvaden7
+/test_frontend.py @visvaden7
+
+# Documentation
+/docs/ @visvaden7
+*.md @visvaden7
+
+# Configuration files
+/requirements.txt @visvaden7
+/.github/ @visvaden7
+/.cursor/ @visvaden7
+
+# Test files
+/test_*.py @visvaden7
